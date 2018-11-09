@@ -3,6 +3,16 @@ Tokenization:
 * https://stackoverflow.com/questions/2456442/how-can-i-highlight-the-line-of-text-that-is-closest-to-the-mouse/2456631#2456631
 * https://stackoverflow.com/questions/25529936/how-to-highlight-a-word-given-coordinates
 
+tokenize by paragraphs:
+```javascript
+// get paras as html by generating & cleaning paragraphs
+var paras = result.content.split("\n")                              // newlines mean para separators
+paras = paras.filter(para => para.length > 0);                      // some empty strings therein
+var parasHTML = '<p>' + paras.join('</p><p>') + '</p>';             // wrap each string in array with para tags
+
+// var contentHTML = `div id="content">${parasHTML}</div>`          // put whatever you want in here, not used currently
+```
+
 
 
 Code Deleted before:
