@@ -1,0 +1,32 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-flow: row;
+    justify-content: center;
+}
+
+h1, .title {
+    font-family: Palatino, Georgia, Times, "Times New Roman", serif;
+    font-weight: bold;
+    font-size: 1.33em;
+    line-height: 1.5em;
+    display: block;
+}
+
+p {
+    font-size: 16px;
+    line-height: 1.5em;
+}
+
+img {
+    max-width: 100%;
+}
+
+.article {
+    /* position absolute breaks the flexbox centering */
+    font-family: Palatino, Georgia, Times, "Times New Roman", serif;
+    position: relative;
+    width: 60%;
+    padding-right: 8px;
+}
