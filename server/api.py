@@ -19,6 +19,11 @@ def content_extractor():
         url = data
         g = Goose(config={'enable_image_fetching': True})
         article = g.extract(url=url)
+        # when you have in extension form, `data` will be the targetSiteURL's
+        # raw html. Hence you'll have the following commansds:
+            # raw_html = data
+            # article = g.extract(raw_html=raw_html)
+        # Right now, though, goose handles getting the html
 
         # if image available send that also
         img_src = ""

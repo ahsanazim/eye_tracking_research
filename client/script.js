@@ -3,6 +3,8 @@ $(document).ready(function() {
     // POST request to our api to extract content
     var targetSiteURL = "https://www.newyorker.com/magazine/2018/10/15/damien-chazelles-moon-shot-in-first-man";
     const URL = "http://localhost:5000/";
+    var rawHTML = "<html>" + $("html").html() + "</html>";      // NOTE: used only when you actually have this in extension form going
+                                                                // grabs the current page's html
     $.ajax({
         type: "POST",
         url: URL,
@@ -11,6 +13,7 @@ $(document).ready(function() {
         contentType : "text/plain",
         crossDomain: true,
         success: function(result){
+            console.log(result.content)
             result = JSON.parse(result)                                         // convert to JSON
             const titleHTML = `<h1 class="title">${result.title}</h1>`;
             const subHeadHTML = ``;
