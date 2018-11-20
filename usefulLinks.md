@@ -1,3 +1,14 @@
+Extensions:
+
+* [https://developer.chrome.com/extensions/overview](https://developer.chrome.com/extensions/overview)
+* [https://developer.chrome.com/extensions/content_scripts#pi](https://developer.chrome.com/extensions/content_scripts#pi)
+* (http://extensionizr.com/)[http://extensionizr.com/]
+* [chrome://extensions/](chrome://extensions/)
+
+
+CORS and such: [https://developers.google.com/web/fundamentals/security/prevent-mixed-content/what-is-mixed-content](https://developers.google.com/web/fundamentals/security/prevent-mixed-content/what-is-mixed-content)
+
+
 Tokenization:
 
 * https://stackoverflow.com/questions/2456442/how-can-i-highlight-the-line-of-text-that-is-closest-to-the-mouse/2456631#2456631
