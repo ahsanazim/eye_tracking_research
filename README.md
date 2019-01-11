@@ -11,3 +11,8 @@ Extension:
 * go to any web page, the extension should automatically do its thing ...
     * eg http://www.wired.com/2012/07/ff_stevejobs/
     * eg https://www.newyorker.com/magazine/2018/10/15/damien-chazelles-moon-shot-in-first-man}
+
+
+Server:
+
+The server is hosted via heroku. Here we have a local copy of it (not guaranteed to be up to date).

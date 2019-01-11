@@ -1,3 +1,11 @@
+Python 
+* [https://realpython.com/python-virtual-environments-a-primer/#using-different-versions-of-python](https://realpython.com/python-virtual-environments-a-primer/#using-different-versions-of-python)
+* [https://stackoverflow.com/questions/31684375/automatically-create-requirements-txt](https://stackoverflow.com/questions/31684375/automatically-create-requirements-txt)
+
+Heroku:
+
+see the git repository where server is pushed
+
 Extensions:
 
 * [https://developer.chrome.com/extensions/overview](https://developer.chrome.com/extensions/overview)
