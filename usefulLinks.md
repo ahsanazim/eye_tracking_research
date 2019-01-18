@@ -100,3 +100,18 @@ $(document).ready(function() {
     });
 });
 ```
+
+
+CSS:
+
+height auto stuff
+
+why height auto instead of 100% for html and body:
+
+[https://stackoverflow.com/questions/15943009/difference-between-css-height-100-vs-height-auto](https://stackoverflow.com/questions/15943009/difference-between-css-height-100-vs-height-auto)
+[https://stackoverflow.com/questions/31765879/flexbox-parent-container-not-growing-along-with-its-children-content-inside-is](https://stackoverflow.com/questions/31765879/flexbox-parent-container-not-growing-along-with-its-children-content-inside-is)
+
+[https://stackoverflow.com/questions/38170964/height-100-when-parent-height-is-auto](https://stackoverflow.com/questions/38170964/height-100-when-parent-height-is-auto)
+
+100% prevents growing along with children
+

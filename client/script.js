@@ -1,8 +1,9 @@
 // on page load
 $(document).ready(function() {
     // POST request to our api to extract content
-    var targetSiteURL = "https://www.newyorker.com/magazine/2018/10/15/damien-chazelles-moon-shot-in-first-man";
-    const URL = "http://localhost:5000/";
+    var targetSiteURL = "https://www.texasobserver.org/anatomy-tragedy/";
+    // const URL = "http://localhost:5000/";                                // for local
+    const URL = "https://mysterious-fortress-86319.herokuapp.com/"          // remote api hosted on heroku
     var rawHTML = "<html>" + $("html").html() + "</html>";      // NOTE: used only when you actually have this in extension form going
                                                                 // grabs the current page's html
     $.ajax({
