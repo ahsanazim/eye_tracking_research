@@ -14,7 +14,27 @@ Extensions:
 * [chrome://extensions/](chrome://extensions/)
 
 
-CORS and such: [https://developers.google.com/web/fundamentals/security/prevent-mixed-content/what-is-mixed-content](https://developers.google.com/web/fundamentals/security/prevent-mixed-content/what-is-mixed-content)
+Talon:
+
+* Site:
+    * [https://talonvoice.com/docs/](https://talonvoice.com/docs/)
+    * [https://github.com/talonvoice/examples/blob/master/eye_mon_snap.py](https://github.com/talonvoice/examples/blob/master/eye_mon_snap.py)
+    * [https://talonvoice.slack.com](https://talonvoice.slack.com)
+    * [https://github.com/dwiel/talon_community/tree/master/misc](https://github.com/dwiel/talon_community/tree/master/misc)
+    * [https://old.reddit.com/r/EyeTracking/comments/8p92vf/has_anyone_tried_using_tobii_products_on_mac/](https://old.reddit.com/r/EyeTracking/comments/8p92vf/has_anyone_tried_using_tobii_products_on_mac/)
+    * [https://www.youtube.com/playlist?list=PL2wTcyeSmhsbPZYt65mRiKSeuq6WU-rXZ](https://www.youtube.com/playlist?list=PL2wTcyeSmhsbPZYt65mRiKSeuq6WU-rXZ)
+* Commands
+    * `tail -f ~/.talon/talon.log` for debug log, log file also there
+    * `cd ~/.talon/user` contains user added scripts for which print statement prints to debug log
+        * `eye_mon_swap.py` is a useful file, currently printing to debug log
+    * `~/.talon/bin/repl` talon REPL
+
+
+
+
+
+CORS and such: 
+[https://developers.google.com/web/fundamentals/security/prevent-mixed-content/what-is-mixed-content](https://developers.google.com/web/fundamentals/security/prevent-mixed-content/what-is-mixed-content)
 
 
 Tokenization:
