@@ -75,30 +75,14 @@ $.ajax({
         $("html").html(newPage);
 
         document.onmousemove = function(e){
+            // mouse coordinates
             var x = e.pageX;
             var y = e.pageY;
-            console.log(x, y)
 
-            // var locs = [];
-            // var elems = $(".line");
-            // Array.from(elems).forEach(function (el) {
-            //     var rect = el.getBoundingClientRect();
-            //     var span_x = (rect.left + rect.right) / 2;
-            //     var span_y = (rect.top + rect.bottom) / 2;
-            //     locs.push(`${span_x} ${span_y}`)
-            // });
-            // console.log(locs)
+            // correct y coordinate for scrolling
+            y -= $(window).scrollTop();
 
-            // one way of dealing with height difference
-            // var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-            // var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-            // while (x > w) {
-            //     x -= w;
-            // }
-            // while (y > h) {
-            //     y -= h;
-            // }
-            y -= $(window).scrollTop();         // correct for height
+            // highlight the relevant line (unhighlighting everything else)
             var elems = $("span");
             Array.from(elems).forEach(function (el) {
                 $(el).css("background-color", "white");
@@ -107,39 +91,6 @@ $.ajax({
             if (el.nodeName.toLowerCase() == "span") {
                 $(el).css("background-color", "yellow");
             }
-
-            // OR
-        
-            // var distances = [];
-            // var elems = $("span");
-            // Array.from(elems).forEach(function (el) {
-            //     var rect = el.getBoundingClientRect();
-            //     var span_x = (rect.left + rect.right) / 2;
-            //     var span_y = (rect.top + rect.bottom) / 2;
-            //     var a = x - span_x;
-            //     var b = y - span_y;
-            //     var c = Math.sqrt( a*a + b*b );
-            //     distances.push(c);
-            // });
-        
-            // var closest = 0;
-            // for (i=0; i<distances.length;i++) {
-            //     if (distances[i] < distances[closest]) {
-            //          closest = i;
-            //     }
-            // }
-            // console.log(distances, x, y)
-            // // elems[i].addClass("higlighted");)
-            // Array.from(elems).forEach(function (el) {
-            //     $(el).css("background-color", "green");
-            // });
-            // $(elems[closest]).css("background-color", "yellow");
-        
-        
-            // var element = document.elementFromPoint(x, y);
-            // if (element.nodeName.toLowerCase() == "span") {
-            //     $(element).css("background-color", "yellow");
-            // }
         }
     }
 },

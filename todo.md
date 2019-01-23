@@ -26,6 +26,9 @@ https://stackoverflow.com/questions/1938356/chrome-browser-action-click-not-work
 
 https://stackoverflow.com/questions/17601615/the-chrome-extension-popup-is-not-working-click-events-are-not-handled
 
+https://stackoverflow.com/questions/11373741/detecting-by-how-much-user-has-scrolled scrollTop
+
+
 note file paths are always from ./extension
 
 
