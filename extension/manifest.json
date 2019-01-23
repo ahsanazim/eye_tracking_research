@@ -34,23 +34,5 @@
     "geolocation",
     "https://*/*"
   ],
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "css": [
-        "src/inject/inject.css"
-      ]
-    },
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "js/jquery/jquery.js",
-        "src/inject/inject.js"
-      ]
-    }
-  ]
+  "content_scripts": []
 }

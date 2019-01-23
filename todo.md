@@ -20,10 +20,33 @@ https://stackoverflow.com/questions/4845215/making-a-chrome-extension-download-a
 https://stackoverflow.com/questions/2652094/start-an-external-application-from-a-google-chrome-extension
 https://github.com/ahsanazim/thesis/blob/master/client/article_1.html
 
+latest:
+
+https://stackoverflow.com/questions/1938356/chrome-browser-action-click-not-working
+
+https://stackoverflow.com/questions/17601615/the-chrome-extension-popup-is-not-working-click-events-are-not-handled
+
+note file paths are always from ./extension
 
 
-Ask:
 
-* does the span format make sense? show complications, e.g.
-    * single-line issue
-* mention that the fetcher is not perfect (though you can fix this)
+was in content scripts before:
+```
+{
+    "matches": [
+    "<all_urls>"
+    ],
+    "css": [
+    "src/inject/inject.css"
+    ]
+},
+{
+    "matches": [
+    "<all_urls>"
+    ],
+    "js": [
+    "js/jquery/jquery.js",
+    "src/inject/inject.js"
+    ]
+}
+```

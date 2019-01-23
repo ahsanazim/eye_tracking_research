@@ -89,17 +89,19 @@ $.ajax({
             // });
             // console.log(locs)
 
+            // one way of dealing with height difference
             // var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-            var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+            // var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
             // while (x > w) {
             //     x -= w;
             // }
-            while (y > h) {
-                y -= h;
-            }
+            // while (y > h) {
+            //     y -= h;
+            // }
+            y -= $(window).scrollTop();         // correct for height
             var elems = $("span");
             Array.from(elems).forEach(function (el) {
-                $(el).css("background-color", "green");
+                $(el).css("background-color", "white");
             });
             el = document.elementFromPoint(x, y)
             if (el.nodeName.toLowerCase() == "span") {
