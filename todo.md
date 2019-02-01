@@ -28,6 +28,10 @@ https://stackoverflow.com/questions/17601615/the-chrome-extension-popup-is-not-w
 
 https://stackoverflow.com/questions/11373741/detecting-by-how-much-user-has-scrolled scrollTop
 
+https://websockets.readthedocs.io/en/stable/intro.html
+https://stackoverflow.com/questions/5419888/reading-from-a-frequently-updated-file
+
+
 
 note file paths are always from ./extension
 
