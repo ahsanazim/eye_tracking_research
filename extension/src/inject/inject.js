@@ -6,6 +6,9 @@ console.log("COMINGGGGGGGGGGGGGGGG");
 alert(location.href);
 */
 
+var spanID = -1;
+var oldX = Infinity;
+
 // POST request to our api to extract content
 var targetSiteURL = location.href
 // const URL = "http://localhost:5000/";                                // local server
@@ -105,6 +108,11 @@ $.ajax({
                 // console.log(received_msg);          // uncomment to log all coordinates
                 var tokens = received_msg.split('|');
                 if (tokens[0] === 'during') {
+
+                    ///////////////////////////////////////////////////////////
+                    // GET AND TRANSFOR GAZE COORDINATES
+                    ///////////////////////////////////////////////////////////
+
                     // get normalized gaze position
                     var tobii_x = parseInt(tokens[1]);
                     var tobii_y = parseInt(tokens[2]);
@@ -129,38 +137,58 @@ $.ajax({
                             avg_denom += 1;
                         }
                     }
+                    // final x,y coords
                     x = x_sum / avg_denom;
                     y = y_sum / avg_denom;
 
-                    // add an offset to deal with slight innacuracy (one line' worth)
-                    // y += 28;
-                    // draw dot at current gaze position    DO NOT DELETE!!!! -- uncomment whenever you need tracer
-                    // var dot_color = 'blue';
-                    // var dot_size = '10px';
-                    // $("body").append(
-                    //     $('<div></div>')
-                    //         .css('position', 'absolute')
-                    //         .css('top', y + 'px')
-                    //         .css('left', x + 'px')
-                    //         .css('width', dot_size)
-                    //         .css('height', dot_size)
-                    //         .css('background-color', dot_color)
-                    // );
+                    ///////////////////////////////////////////////////////////
+                    // NEW HIGHLIGHTING MECHANISM: use a 'slider'
+                    ///////////////////////////////////////////////////////////
+                    // highlight the relevant line (unhighlighting everything else)
+                    // highlight a new line if necessary
+                    // TODO: another idea -- use the Queue?
+                    if (x < oldX - 50) {
+                        console.log(x, oldX);
+                        // first set all lines back to default color (to overwrite prev line)
+                        var elems = $("span");                      // all spans
+                        Array.from(elems).forEach(function (el) {
+                            $(el).css("background-color", "green");
+                        });
+                        // highlight new line
+                        spanID += 1;
+                        console.log(spanID);
+                        var currSpanElement = $('span#' + spanID.toString());
+                        console.log(currSpanElement);
+                        $(currSpanElement).css("background-color", "yellow");
+                    }
+                    oldX = x;           // update previous x coord marker
+
+
+
                     
+                    ///////////////////////////////////////////////////////////
+                    // OLD HIGHLIGHTING MECHANISM: go straight for the current line
+                    ///////////////////////////////////////////////////////////
+                    /*
                     // highlight the relevant line (unhighlighting everything else)
                     var elems = $("span");
                     el = document.elementFromPoint(x, y);
+                    // if its a span
                     if ((el != null) && (el.nodeName.toLowerCase() == "span")) {
+                        // set all lines back to default color (to overwrite prev line)
                         Array.from(elems).forEach(function (el) {
                             $(el).css("background-color", "green");
                         });
                         console.log("SUCCESS", x, y);
+                        // set our current span to desired color
                         $(el).css("background-color", "yellow");
                         console.log(el);
                     } else {
                         console.log("failure", x, y);
                         console.log(el);
                     }
+                    */
+
                 }
             };
 
