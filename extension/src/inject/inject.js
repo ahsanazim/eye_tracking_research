@@ -6,9 +6,6 @@ console.log("COMINGGGGGGGGGGGGGGGG");
 alert(location.href);
 */
 
-var spanID = -1;
-var oldX = Infinity;
-
 // POST request to our api to extract content
 var targetSiteURL = location.href
 // const URL = "http://localhost:5000/";                                // local server
@@ -88,9 +85,34 @@ $.ajax({
          * 
          **************************************************************/
 
+        // for raw coordinates:
         // array of arrays with last 10 x,y positions of gaze tracker
         var coords_q = [[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1]];
         var data = [];    // array of [line_num, timestamp] objects
+
+        // for line highlighting:
+        var spanID = 0;
+        // var oldX = Infinity;
+        // var all_q = [];         // holds *all* x coords seen
+        // var timePassed = false;     // flag for when enough time has passed b/w
+        //                             // cycles of negative gradients
+
+        //////////////////////////////////
+        // for quadrant-based highlighting
+        var startX = 0;
+        var quadLen = 200;
+        var quadRanges = [0, 0, 0, 0];
+        // establish quadrant ranges
+        for(var i = 0; i < quads.length; i++) {
+            quadRanges[i] = startX + (quadLen * i);
+        }
+        var quadFreqs = [];
+        for(var i = 0; i < spanNum; i++) {
+            quadFreqs.push([0, 0, 0, 0])
+        }
+
+        //////////////////////////////////
+
         if ("WebSocket" in window) {
             //alert("WebSocket is supported by your Browser!");
             
@@ -140,54 +162,113 @@ $.ajax({
                     // final x,y coords
                     x = x_sum / avg_denom;
                     y = y_sum / avg_denom;
+                    
+                    
+                    // all_q.push(x);      // for slider based highlighting
+
 
                     ///////////////////////////////////////////////////////////
-                    // NEW HIGHLIGHTING MECHANISM: use a 'slider'
+                    // HIGHLIGHTING MECHANISM: quadrant-based
                     ///////////////////////////////////////////////////////////
-                    // highlight the relevant line (unhighlighting everything else)
-                    // highlight a new line if necessary
-                    // TODO: another idea -- use the Queue?
-                    if (x < oldX - 50) {
-                        console.log(x, oldX);
-                        // first set all lines back to default color (to overwrite prev line)
-                        var elems = $("span");                      // all spans
-                        Array.from(elems).forEach(function (el) {
-                            $(el).css("background-color", "green");
-                        });
-                        // highlight new line
-                        spanID += 1;
-                        console.log(spanID);
-                        var currSpanElement = $('span#' + spanID.toString());
-                        console.log(currSpanElement);
-                        $(currSpanElement).css("background-color", "yellow");
+
+                    var currSpanId = -1;
+
+                    // find id of current span
+                    el = document.elementFromPoint(x, y);
+                    // if element under pointer is one of our spans
+                    if (el != null){
+                        var isSpan = (el.nodeName.toLowerCase() == "span");
+                        var isOurClass = ($(el).attr('class') == "line");
+                        if (isSpan && isOurClass) {
+                            // extract and set id of our pointer
+                            currSpanId = $(el).attr('id');
+                            currSpanId = parseInt(currSpanId);      
+                        }
                     }
-                    oldX = x;           // update previous x coord marker
+
+                    // iterate through various quadrant markers
+                    for(var i = 0; i < quadRanges.length; i++) {
+                        // found the quadrant point is in
+                        if ((startX < x) && (x < quadRanges[i])) {
+                            // increment counter for quad num in relevant span
+                            quadFreqs[currSpanID][i] += 1;
+                        }
+                    }
+
+                    // rehighlight page based on updated frequencies
+
+
+                    ///////////////////////////////////////////////////////////
+                    // HIGHLIGHTING MECHANISM: use a 'slider'
+                    ///////////////////////////////////////////////////////////
+
+                    // // ATTEMPT # 1
+
+                    // // highlight first line
+                    // if (spanID == 0) {
+                    //     var firstLineSpan = $('span#0');
+                    //     $(firstLineSpan).css("background-color", "yellow");
+                    // }
+
+                    // // shift slider to next line - `hasNegativeGradient` does all the work
+                    // if (hasNegativeGradient(all_q)) {
+                    //     console.log(all_q.slice(Math.max(all_q.length - 10, 1)));
+                    //     console.log("moving to newline", x);
+                    //     // first set all lines back to default color (to overwrite prev line)
+                    //     var elems = $("span");                      // all spans
+                    //     Array.from(elems).forEach(function (el) {
+                    //         $(el).css("background-color", "white");
+                    //     });
+                    //     // highlight new line
+                    //     spanID += 1;
+                    //     console.log(spanID);
+                    //     var currSpanElement = $('span#' + spanID.toString());
+                    //     console.log(currSpanElement);
+                    //     $(currSpanElement).css("background-color", "yellow");
+                    // }
+
+                    // // ATTEMPT # 2
+
+                    // console.log("simple", x, oldX);
+                    // if (x < oldX - 50) {
+                    //     console.log(x, oldX);
+                    //     // first set all lines back to default color (to overwrite prev line)
+                    //     var elems = $("span");                      // all spans
+                    //     Array.from(elems).forEach(function (el) {
+                    //         $(el).css("background-color", "green");
+                    //     });
+                    //     // highlight new line
+                    //     spanID += 1;
+                    //     console.log(spanID);
+                    //     var currSpanElement = $('span#' + spanID.toString());
+                    //     console.log(currSpanElement);
+                    //     $(currSpanElement).css("background-color", "yellow");
+                    // }
+                    // oldX = x;           // update previous x coord marker
 
 
 
                     
                     ///////////////////////////////////////////////////////////
-                    // OLD HIGHLIGHTING MECHANISM: go straight for the current line
+                    // HIGHLIGHTING MECHANISM: go straight for the current line
                     ///////////////////////////////////////////////////////////
-                    /*
                     // highlight the relevant line (unhighlighting everything else)
-                    var elems = $("span");
-                    el = document.elementFromPoint(x, y);
-                    // if its a span
-                    if ((el != null) && (el.nodeName.toLowerCase() == "span")) {
-                        // set all lines back to default color (to overwrite prev line)
-                        Array.from(elems).forEach(function (el) {
-                            $(el).css("background-color", "green");
-                        });
-                        console.log("SUCCESS", x, y);
-                        // set our current span to desired color
-                        $(el).css("background-color", "yellow");
-                        console.log(el);
-                    } else {
-                        console.log("failure", x, y);
-                        console.log(el);
-                    }
-                    */
+                    // var elems = $("span");
+                    // el = document.elementFromPoint(x, y);
+                    // // if its a span
+                    // if ((el != null) && (el.nodeName.toLowerCase() == "span")) {
+                    //     // set all lines back to default color (to overwrite prev line)
+                    //     Array.from(elems).forEach(function (el) {
+                    //         $(el).css("background-color", "green");
+                    //     });
+                    //     console.log("SUCCESS", x, y);
+                    //     // set our current span to desired color
+                    //     $(el).css("background-color", "yellow");
+                    //     console.log(el);
+                    // } else {
+                    //     console.log("failure", x, y);
+                    //     console.log(el);
+                    // }
 
                 }
             };
@@ -252,6 +333,65 @@ $.ajax({
         console.log(`Error: ${error}`);
     }
 });
+
+
+/**
+ * Returns true if elements in a certain window of an
+ * array are sorted in descending order.
+ * This is equivalent, in our use case, to the graph
+ * of x-coordinates having a negative gradient in a 
+ * given window (thus representing line change as
+ * eyes scan right to left across a page, as opposed
+ * to the usual left to right in reading).
+ * @param {array} arr
+ */
+function hasNegativeGradient(arr) {
+    // mark the window you want to check
+    var highIdx = arr.length - 1;
+    var lowIdx = arr.length - 10;
+
+    // TRYING SOMETHING DIFFERENT:
+    // this is still inducing problems
+    if ((arr[highIdx] < 300) && (arr[highIdx - 30] > 600)) {
+        return true;
+    } else {
+        return false;
+    }
+
+
+    if (lowIdx < 1) {           // array not long enough for checking
+        return false;
+    }
+    // check given window for any pair that violates condition
+    for (var i = highIdx; i > lowIdx; i--) {
+        if (arr[i] > arr[i - 1]) {
+            return false;
+        }
+    }
+    // condition never violated
+    // elements in our current window are in descending order
+    return true;
+}
+
+function hasPositiveGradient(arr) {
+    // mark the window you want to check
+    var highIdx = arr.length - 1;
+    var lowIdx = arr.length - 10;
+    if (lowIdx < 1) {           // array not long enough for checking
+        return true;
+    }
+    // check given window for any pair that violates condition
+    for (var i = highIdx; i > lowIdx; i--) {
+        if (arr[i] < arr[i - 1]) {
+            return false;
+        }
+    }
+    // condition never violated
+    // elements in our current window are in descending order
+    return true;
+}
+  
+
 
 
 // https://stackoverflow.com/questions/1248081/get-the-browser-viewport-dimensions-with-javascript
