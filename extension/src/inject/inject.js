@@ -159,12 +159,11 @@ $.ajax({
                     ///////////////////////////////////////////////////////////
 
                     // get normalized gaze position
+                    // NOTE: devicePixelRatio
                     var tobii_x = parseInt(tokens[1]);
                     var tobii_y = parseInt(tokens[2]);
-                    var x = tobii_x;
-                    var y = tobii_y
-                    var x = tobii_x + window.screenLeft + (window.outerWidth - window.innerWidth);
-                    var y = tobii_y + window.screenTop - (window.outerHeight - window.innerHeight);
+                    var x = tobii_x + window.screenLeft + (window.devicePixelRatio * (window.outerWidth - window.innerWidth));
+                    var y = tobii_y + window.screenTop - (window.devicePixelRatio * (window.outerHeight - window.innerHeight));
 
 
                     ///////////////////////////////////////////////////////////
@@ -173,8 +172,8 @@ $.ajax({
 
                     // https://www.w3schools.com/cssref/css_colors.asp
                     // https://www.w3schools.com/colors/colors_picker.asp?colorhex=F0F8FF
-                    // var colorLvls = ['DarkRed', 'Red', 'DarkGreen', 'GreenYellow'];
-                    var colorLvls = ['#ffffff', '#f0f8ff', '#cce7ff', '#99cfff'];
+                    var colorLvls = ['DarkRed', 'Red', 'DarkGreen', 'GreenYellow'];
+                    // var colorLvls = ['#ffffff', '#f0f8ff', '#cce7ff', '#99cfff'];
                     var freqLvls = [5, 10, 15, 20];
 
                     // INITIALISATION - DONE ONLY ONCE
