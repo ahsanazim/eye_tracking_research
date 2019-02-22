@@ -229,6 +229,7 @@ $.ajax({
                                 // lvl as index for which color to use
                                 var thisLvlColor = colorLvls[k];
                                 $(`#${currQuadId}`).css("background-color", thisLvlColor);
+                                break;     // exit out once you've found & used correct level
                             }
                         }
 
