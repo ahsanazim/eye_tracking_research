@@ -30,36 +30,71 @@ $.ajax({
          *                  REPLACE PAGE CONTENT
          * 
          **************************************************************/
-        var contentHTML = "";
-        var rawContentStr = result.content;
-        var spanContent = "";
-        var counter = 0;
-        var spanNum = 0;
-        var SPAN_SIZE = 93
+
+        var contentHTML = "";               // the string we'll be filling with spans
+        var rawContentStr = result.content; // string we're iterating through char by char
+        var spanNum = 0;                    // line number
+        var currLineSpans = [];             // quadrant spans for current line
+        var numCharsInQuad = 0;             // number of characters in quadContent currently
+        var QUAD_SIZE = 23;                 // max number of chars in a quadrant span
+        var quadContent = "";               // contents of current quadrant span
+        var quadNum = 0;                    // which quadrant we're on
+        var MAX_QUAD_NUM = 4;               // max number of quadrants in a line
+        
+        // iterate through every character in received content string
         for (var i = 0; i < rawContentStr.length; i++) {
             var ch = rawContentStr.charAt(i);
-            // seen a newline, hence new paragraph
-            if ((ch == "\n") && (spanContent != "")) {       // double check since we get \n chars back to back
-                contentHTML += `<span class="line" id="${spanNum}">${spanContent}</span>`;       // add current content
-                contentHTML += "<br><br>"                   // then insert line break
-                counter = 1;                                // reinitialize everything
+
+            // ALT CASE - seen a newline, hence new paragraph
+            // double check since we get \n chars back to back
+            if ((ch == "\n") && (quadContent != "")) {
+                // add current content
+                contentHTML += `<span class="line" id="${spanNum}">${currLineSpans.join('')}</span>`;
+                // then insert line break
+                contentHTML += "<br><br>"
+                // now reinitialize everything
+                numCharsInQuad = 0;
+                quadNum = 0;
                 spanNum++;
-                spanContent = "";                    
-            } else if (ch != "\n") {                // usual case
-                spanContent += ch;                  // add curr char to curr span's content
-                // we have reached the current span's maximum size 
-                if (counter == SPAN_SIZE) {         // reached end of line (ie add span)
-                    contentHTML += `<span class="line" id="${spanNum}">${spanContent}</span>`;
-                    counter = -1;                   // reinitialize
-                    spanNum++;
-                    spanContent = "";
+                quadContent = "";
+                currLineSpans = [];
+            } 
+
+            // MAIN CASE - usual case, more common
+            else if (ch != "\n") {                // usual case
+                quadContent += ch;                  // add latest ch to content of curr quad
+                numCharsInQuad++;                   // reflect change in num chars var
+
+                // GENERATE QUADRANT SPAN
+                // Current quad reached max size, so generate
+                // span for it and add to array of spans for curr line
+                if (numCharsInQuad == QUAD_SIZE) {
+                    var quadSpan = `<span class="quad" id="${quadNum}">${quadContent}</span>`;
+                    currLineSpans.push(quadSpan);
+                    // set back to initial vals
+                    quadContent = "";
+                    numCharsInQuad = 0;
+                    quadNum++;
                 }
-                counter++;
+
+                // GENERATE CONTAINER LINE SPAN
+                // Required number of quads for curr line have been
+                // generated. Put strings representing each individual 
+                // quadrant span into a container span representing
+                // the current line. Add this span to contentHTML
+                if (quadNum == MAX_QUAD_NUM) {         // reached end of line (ie add span)
+                    contentHTML += `<span class="line" id="${spanNum}">${currLineSpans.join('')}</span>`;
+                    // set back to initial vals
+                    spanNum++;
+                    quadNum = 0;
+                    currLineSpans = []
+                }
             }
+
         }
         // for any leftover content
-        if (spanContent != "") {
-            contentHTML += `<span id="${spanNum}">${spanContent}</span>`;
+        if (quadContent != "") {
+            contentHTML += `<span class="line" id="${spanNum}">${currLineSpans.join('')}</span>`;
         }
         // surround spans with a container div
         contentHTML = `<div class="content">${contentHTML}</div>`
@@ -173,6 +208,8 @@ $.ajax({
 
                     var currSpanId = -1;
 
+                    /*
+
                     // find id of current span
                     el = document.elementFromPoint(x, y);
                     // if element under pointer is one of our spans
@@ -194,6 +231,8 @@ $.ajax({
                             quadFreqs[currSpanID][i] += 1;
                         }
                     }
+
+                    */
 
                     // rehighlight page based on updated frequencies
 
