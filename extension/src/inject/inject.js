@@ -48,7 +48,11 @@ $.ajax({
             // ALT CASE - seen a newline, hence new paragraph
             // double check since we get \n chars back to back
             if ((ch == "\n") && (quadContent != "")) {
-                // add current content
+                // add leftover content - generate quadrant and line spans
+                // 1 - generate quadrant span from leftover chars, add this to the array of spans
+                var quadSpan = `<span class="quad" id="${quadNum}">${quadContent}</span>`;
+                currLineSpans.push(quadSpan);
+                // 2 - generate container line span, add to overall contentHTML string
                 contentHTML += `<span class="line" id="${spanNum}">${currLineSpans.join('')}</span>`;
                 // then insert line break
                 contentHTML += "<br><br>"
