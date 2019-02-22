@@ -182,7 +182,7 @@ $.ajax({
                         for(var i = 0; i < quadFreqs.length; i++) {
                             for(var j = 0; j < quadFreqs[i].length; j++) {
                                 var currQuadFreq = quadFreqs[i][j];
-                                var lvl = 0;
+                                var lvl = 0;            // use lowest level
                                 var thisQuadColor = colorLvls[lvl];
                                 var currSpanNum = i;
                                 var currQuadNum = j;
