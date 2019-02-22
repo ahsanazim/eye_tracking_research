@@ -171,7 +171,10 @@ $.ajax({
                     // HIGHLIGHTING MECHANISM: quadrant-based
                     ///////////////////////////////////////////////////////////
 
-                    var colorLvls = ['DarkRed', 'Red', 'DarkGreen', 'GreenYellow'];
+                    // https://www.w3schools.com/cssref/css_colors.asp
+                    // https://www.w3schools.com/colors/colors_picker.asp?colorhex=F0F8FF
+                    // var colorLvls = ['DarkRed', 'Red', 'DarkGreen', 'GreenYellow'];
+                    var colorLvls = ['#ffffff', '#f0f8ff', '#cce7ff', '#99cfff'];
                     var freqLvls = [5, 10, 15, 20];
 
                     // INITIALISATION - DONE ONLY ONCE
