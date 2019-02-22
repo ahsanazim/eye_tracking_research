@@ -73,7 +73,7 @@ $.ajax({
                 // Current quad reached max size, so generate
                 // span for it and add to array of spans for curr line
                 if (numCharsInQuad == QUAD_SIZE) {
-                    var quadSpan = `<span class="quad" id="${quadNum}">${quadContent}</span>`;
+                    var quadSpan = `<span class="quad" id="${quadNum}${spanNum}">${quadContent}</span>`;
                     currLineSpans.push(quadSpan);
                     // set back to initial vals
                     quadContent = "";
@@ -125,28 +125,12 @@ $.ajax({
          **************************************************************/
 
         // for raw coordinates:
-        // array of arrays with last 10 x,y positions of gaze tracker
-        var coords_q = [[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1]];
         var data = [];    // array of [line_num, timestamp] objects
 
-        // for line highlighting:
-        var spanID = 0;
-        // var oldX = Infinity;
-        // var all_q = [];         // holds *all* x coords seen
-        // var timePassed = false;     // flag for when enough time has passed b/w
-        //                             // cycles of negative gradients
+        var initialHighlightingDone = false;
 
-        //////////////////////////////////
-        // for quadrant-based highlighting
-        var startX = 0;
-        var quadLen = 200;
-        var quadRanges = [0, 0, 0, 0];
-        // establish quadrant ranges
-        for(var i = 0; i < quads.length; i++) {
-            quadRanges[i] = startX + (quadLen * i);
-        }
         var quadFreqs = [];
-        for(var i = 0; i < spanNum; i++) {
+        for(var i = 0; i <= spanNum; i++) {
             quadFreqs.push([0, 0, 0, 0])
         }
 
@@ -182,136 +166,73 @@ $.ajax({
                     var x = tobii_x + window.screenLeft + (window.outerWidth - window.innerWidth);
                     var y = tobii_y + window.screenTop - (window.outerHeight - window.innerHeight);
 
-                    // smoothing -- compute stabilized x and y coords
-                    // use coords_q as queue sliding over past 10 x,y positions
-                    // mean of these is our current position1
-
-                    var x_sum = 0.0;
-                    var y_sum = 0.0;
-                    var avg_denom = 0.0; // needed b/c of initial cases where coords_q not filled fully
-                    coords_q.push([x,y]);
-                    coords_q.shift();
-                    for(var i = 0; i < coords_q.length; i++) {
-                        if (coords_q[i][0] !== -1) {
-                            x_sum += parseFloat(coords_q[i][0]);
-                            y_sum += parseFloat(coords_q[i][1]);
-                            avg_denom += 1;
-                        }
-                    }
-                    // final x,y coords
-                    x = x_sum / avg_denom;
-                    y = y_sum / avg_denom;
-                    
-                    
-                    // all_q.push(x);      // for slider based highlighting
-
 
                     ///////////////////////////////////////////////////////////
                     // HIGHLIGHTING MECHANISM: quadrant-based
                     ///////////////////////////////////////////////////////////
 
-                    var currSpanId = -1;
+                    var colorLvls = ['DarkRed', 'Red', 'DarkGreen', 'GreenYellow'];
+                    var freqLvls = [5, 10, 15, 20];
 
-                    /*
+                    // INITIALISATION - DONE ONLY ONCE
+                    // at first you have to color everything the most basic color
+                    // this is only done once, afterwards you'll continue updating
+                    // each quadrant individually
+                    if (!initialHighlightingDone) {
+                        for(var i = 0; i < quadFreqs.length; i++) {
+                            for(var j = 0; j < quadFreqs[i].length; j++) {
+                                var currQuadFreq = quadFreqs[i][j];
+                                var lvl = 0;
+                                var thisQuadColor = colorLvls[lvl];
+                                var currSpanNum = i;
+                                var currQuadNum = j;
+                                var thisQuadId = `${currQuadNum.toString()}${currSpanNum.toString()}`
+                                $(`#${thisQuadId}`).css("background-color", thisQuadColor);
+                            }
+                        }
+                        initialHighlightingDone = true;
+                    }
 
-                    // find id of current span
+                    var currQuadId = '';
+
+                    // STEP 1 
+                    // check if gaze is on a quadrant
                     el = document.elementFromPoint(x, y);
-                    // if element under pointer is one of our spans
+                    // if element under pointer is one of our quads
                     if (el != null){
                         var isSpan = (el.nodeName.toLowerCase() == "span");
-                        var isOurClass = ($(el).attr('class') == "line");
+                        var isOurClass = ($(el).attr('class') == "quad");
                         if (isSpan && isOurClass) {
                             // extract and set id of our pointer
-                            currSpanId = $(el).attr('id');
-                            currSpanId = parseInt(currSpanId);      
+                            currQuadId = $(el).attr('id');
                         }
-                    }
-
-                    // iterate through various quadrant markers
-                    for(var i = 0; i < quadRanges.length; i++) {
-                        // found the quadrant point is in
-                        if ((startX < x) && (x < quadRanges[i])) {
-                            // increment counter for quad num in relevant span
-                            quadFreqs[currSpanID][i] += 1;
-                        }
-                    }
-
-                    */
-
-                    // rehighlight page based on updated frequencies
-
-
-                    ///////////////////////////////////////////////////////////
-                    // HIGHLIGHTING MECHANISM: use a 'slider'
-                    ///////////////////////////////////////////////////////////
-
-                    // // ATTEMPT # 1
-
-                    // // highlight first line
-                    // if (spanID == 0) {
-                    //     var firstLineSpan = $('span#0');
-                    //     $(firstLineSpan).css("background-color", "yellow");
-                    // }
-
-                    // // shift slider to next line - `hasNegativeGradient` does all the work
-                    // if (hasNegativeGradient(all_q)) {
-                    //     console.log(all_q.slice(Math.max(all_q.length - 10, 1)));
-                    //     console.log("moving to newline", x);
-                    //     // first set all lines back to default color (to overwrite prev line)
-                    //     var elems = $("span");                      // all spans
-                    //     Array.from(elems).forEach(function (el) {
-                    //         $(el).css("background-color", "white");
-                    //     });
-                    //     // highlight new line
-                    //     spanID += 1;
-                    //     console.log(spanID);
-                    //     var currSpanElement = $('span#' + spanID.toString());
-                    //     console.log(currSpanElement);
-                    //     $(currSpanElement).css("background-color", "yellow");
-                    // }
-
-                    // // ATTEMPT # 2
-
-                    // console.log("simple", x, oldX);
-                    // if (x < oldX - 50) {
-                    //     console.log(x, oldX);
-                    //     // first set all lines back to default color (to overwrite prev line)
-                    //     var elems = $("span");                      // all spans
-                    //     Array.from(elems).forEach(function (el) {
-                    //         $(el).css("background-color", "green");
-                    //     });
-                    //     // highlight new line
-                    //     spanID += 1;
-                    //     console.log(spanID);
-                    //     var currSpanElement = $('span#' + spanID.toString());
-                    //     console.log(currSpanElement);
-                    //     $(currSpanElement).css("background-color", "yellow");
-                    // }
-                    // oldX = x;           // update previous x coord marker
-
-
-
+                    } 
                     
-                    ///////////////////////////////////////////////////////////
-                    // HIGHLIGHTING MECHANISM: go straight for the current line
-                    ///////////////////////////////////////////////////////////
-                    // highlight the relevant line (unhighlighting everything else)
-                    // var elems = $("span");
-                    // el = document.elementFromPoint(x, y);
-                    // // if its a span
-                    // if ((el != null) && (el.nodeName.toLowerCase() == "span")) {
-                    //     // set all lines back to default color (to overwrite prev line)
-                    //     Array.from(elems).forEach(function (el) {
-                    //         $(el).css("background-color", "green");
-                    //     });
-                    //     console.log("SUCCESS", x, y);
-                    //     // set our current span to desired color
-                    //     $(el).css("background-color", "yellow");
-                    //     console.log(el);
-                    // } else {
-                    //     console.log("failure", x, y);
-                    //     console.log(el);
-                    // }
+                    // STEP 2
+                    // take action only if gaze was on a quadrant
+                    if (currQuadId != '') {
+                        // parse the quadrant span's ID for quad number and span number
+                        // quadNums range [0,3], whereas spans are [0,INF]
+                        // In a string XYYYY , X = quad number, Y = span number
+                        var quadNum = parseInt(currQuadId.charAt(0));
+                        var spanNum = parseInt(currQuadId.substr(1));
+
+                        // increment entry for relevant quadrant 
+                        // of relevant line in freq matrix
+                        quadFreqs[spanNum][quadNum] += 1;
+
+                        // find which level this new frequency corresponds to
+                        for(var k = 0; k < freqLvls.length; k++) {
+                            var currQuadFreq = quadFreqs[spanNum][quadNum];
+                            if (currQuadFreq < freqLvls[k]) {
+                                // found relevant level, color the quadrant using 
+                                // lvl as index for which color to use
+                                var thisLvlColor = colorLvls[k];
+                                $(`#${currQuadId}`).css("background-color", thisLvlColor);
+                            }
+                        }
+
+                    }
 
                 }
             };
