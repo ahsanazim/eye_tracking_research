@@ -55,7 +55,7 @@ $.ajax({
                 // 2 - generate container line span, add to overall contentHTML string
                 contentHTML += `<span class="line" id="${spanNum}">${currLineSpans.join('')}</span>`;
                 // then insert line break
-                contentHTML += "<br><br>"
+                contentHTML += "<br><br>";
                 // now reinitialize everything
                 numCharsInQuad = 0;
                 quadNum = 0;
@@ -227,10 +227,10 @@ $.ajax({
                         // use custom formulat to convert frequencies for each
                         // quadrant to a single percent read 
                         var freqs = quadFreqs[spanNum];
-                        var normalisedFreq = freqs[0] + freqs[1] + freqs[2] + (100 * freqs[3]);
-                        var MAX = 500;
+                        var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
+                        var MAX = 450;
                         percentRead = (normalisedFreq / MAX) * 100;
-                        console.log(percentRead);
+                        console.log(spanNum, percentRead);
 
                         // use linear gradient with given percent to highlight 
                         // the selected span
