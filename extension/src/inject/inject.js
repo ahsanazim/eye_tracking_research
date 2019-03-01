@@ -166,9 +166,88 @@ $.ajax({
                     var y = tobii_y + window.screenTop - (window.devicePixelRatio * (window.outerHeight - window.innerHeight));
 
 
+
                     ///////////////////////////////////////////////////////////
-                    // HIGHLIGHTING MECHANISM: quadrant-based
+                    // HIGHLIGHTING MECHANISM: line + quadrant based
                     ///////////////////////////////////////////////////////////
+
+                    // https://www.w3schools.com/cssref/css_colors.asp
+                    // https://www.w3schools.com/colors/colors_picker.asp?colorhex=F0F8FF
+                    // var colorLvls = ['DarkRed', 'Red', 'DarkGreen', 'GreenYellow'];
+                    var colorLvls = ['#ffffff', '#f0f8ff', '#cce7ff', '#99cfff'];
+
+                    // INITIALISATION - DONE ONLY ONCE
+                    // at first you have to color everything the most basic color
+                    // this is only done once, afterwards you'll continue updating
+                    // each quadrant individually
+                    if (!initialHighlightingDone) {
+                        for(var i = 0; i < quadFreqs.length; i++) {
+                            for(var j = 0; j < quadFreqs[i].length; j++) {
+                                var baseColor = colorLvls[0];   // use lowest level
+                                var currSpanNum = i;
+                                var currQuadNum = j;
+                                var spanHandle = $(`#${currSpanNum}.line`);   // note `#x.y` instead of `#x .y`
+                                spanHandle.css("background-color", baseColor);
+                            }
+                        }
+                        initialHighlightingDone = true;
+                    }
+
+                    var currQuadId = '';
+
+                    // STEP 1 
+                    // check if gaze is on a quadrant
+                    el = document.elementFromPoint(x, y);
+                    // if element under pointer is one of our quads
+                    if (el != null){
+                        var isSpan = (el.nodeName.toLowerCase() == "span");
+                        var isOurClass = ($(el).attr('class') == "quad");
+                        if (isSpan && isOurClass) {
+                            // extract and set id of our pointer
+                            currQuadId = $(el).attr('id');
+                        }
+                    } 
+                    
+                    // STEP 2
+                    // take action only if gaze was on a quadrant
+                    if (currQuadId != '') {
+                        // parse the quadrant span's ID for quad number and span number
+                        // quadNums range [0,3], whereas spans are [0,INF]
+                        // In a string XYYYY , X = quad number, Y = span number
+                        var quadNum = parseInt(currQuadId.charAt(0));
+                        var spanNum = parseInt(currQuadId.substr(1));
+
+                        // selector for span containing these quadrants
+                        var spanHandle = $(`#${spanNum}.line`);     // note `#x.y` instead of `#x .y`
+
+                        // increment entry for relevant quadrant 
+                        // of relevant line in freq matrix
+                        quadFreqs[spanNum][quadNum] += 1;
+
+                        // use custom formulat to convert frequencies for each
+                        // quadrant to a single percent read 
+                        var freqs = quadFreqs[spanNum];
+                        var normalisedFreq = freqs[0] + freqs[1] + freqs[2] + (100 * freqs[3]);
+                        var MAX = 500;
+                        percentRead = (normalisedFreq / MAX) * 100;
+                        console.log(percentRead);
+
+                        // use linear gradient with given percent to highlight 
+                        // the selected span
+                        var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
+                        spanHandle.css("background", backgroundCSS);
+                    }
+
+
+                    ///////////////////////////////////////////////////////////
+
+
+
+                    ///////////////////////////////////////////////////////////
+                    // HIGHLIGHTING MECHANISM: only quadrant-based
+                    ///////////////////////////////////////////////////////////
+
+                    /*      // uncomment to activate
 
                     // https://www.w3schools.com/cssref/css_colors.asp
                     // https://www.w3schools.com/colors/colors_picker.asp?colorhex=F0F8FF
@@ -234,8 +313,11 @@ $.ajax({
                                 break;     // exit out once you've found & used correct level
                             }
                         }
-
                     }
+
+                    */
+
+                    ///////////////////////////////////////////////////////////
 
                 }
             };
