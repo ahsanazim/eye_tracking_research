@@ -62,9 +62,13 @@ img {
     width: auto;
 }
 
-.content span {
+.content .line {
     display: block;
     font-size: 18px;
     line-height: 1.5em;
     z-index: 100;
+}
+
+.content .line .quad {
+    z-index: 101;
 }
