@@ -1,3 +1,5 @@
+/**************** PRE SET ****************/
+
 // if you checked "fancy-settings" in extensionizr.com, uncomment this lines
 
 // var settings = new Store("settings", {
@@ -12,11 +14,12 @@
 //     sendResponse();
 //   });
 
-
-
 // chrome.browserAction.onClicked.addListener(function(activeTab) {
 //   chrome.tabs.executeScript(null, {file: "content.js"});
 // });s
+
+
+/**************** YOUR STUFF ****************/
 
 // https://stackoverflow.com/questions/55637406/how-to-remove-this-cross-origin-read-blocking-corb-blocked-cross-origin-respo
 // https://www.chromium.org/Home/chromium-security/extension-content-script-fetches
