@@ -64,8 +64,8 @@ img {
 
 .content .line {
     display: block;
-    font-size: 18px;
-    line-height: 1.5em;
+    font-size: 23px;
+    line-height: 2;
     z-index: 100;
 }
 

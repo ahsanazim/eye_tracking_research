@@ -184,27 +184,36 @@ chrome.runtime.sendMessage(
                     }
 
                     var currQuadId = '';
+                    var currLineId = '';
 
+                    // -----------------
                     // STEP 1 
-                    // check if gaze is on a quadrant
+                    // -----------------
+                    // check if gaze is on a quadrant, line, or neither
                     el = document.elementFromPoint(x, y);
                     // if element under pointer is one of our quads
                     if (el != null){
                         var isSpan = (el.nodeName.toLowerCase() == "span");
-                        var isOurClass = ($(el).attr('class') == "quad");
-                        if (isSpan && isOurClass) {
-                            // extract and set id of our pointer
-                            currQuadId = $(el).attr('id');
+                        var spanClassName = $(el).attr('class');
+                        if (isSpan) {
+                            if (spanClassName == "quad") {
+                                // extract and set id of our pointer
+                                currQuadId = $(el).attr('id');
+                            } else if (spanClassName == "line") {
+                                currLineId = $(el).attr('id');
+                            }
                         }
-                        console.log(el);
                     }
-                    console.log(el);
                     
 
-                    
+                    // -----------------
                     // STEP 2
+                    // -----------------
                     // IF gaze was on a line
                     var infoStr = '';               // will fill with info you send back to server
+
+                    // CASE 1 - gaze rested on specific quadrant (subset of line)
+                    // -----------------
                     if (currQuadId != '') {
                         // parse the quadrant span's ID for quad number and span number
                         // quadNums range [0,3], whereas spans are [0,INF]
@@ -217,9 +226,6 @@ chrome.runtime.sendMessage(
 
                         // increment entry for relevant quadrant 
                         // of relevant line in freq matrix
-                        console.log(currQuadId);
-                        console.log(spanNum, quadNum);
-                        console.log(quadFreqs);
                         quadFreqs[spanNum][quadNum] += 1;
 
                         // use custom formulat to convert frequencies for each
@@ -228,7 +234,6 @@ chrome.runtime.sendMessage(
                         var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
                         var MAX = 450;
                         percentRead = (normalisedFreq / MAX) * 100;
-                        console.log(spanNum, percentRead);
 
                         // record info on line num, quad num, and timestamp
                         const t = (new Date()).getTime();
@@ -238,10 +243,47 @@ chrome.runtime.sendMessage(
                         // the selected span
                         var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
                         spanHandle.css("background", backgroundCSS);
-                    } else {        // Gaze not on a line
+                    
+                    // CASE 2 - gaze rested on a line, but no specific quadrant
+                    // -----------------
+                    } else if (currLineId != '') {        // Gaze not on a line
+                        // id of `line` span == line number of that span
+                        var lineNum = currLineId;
+                        // get a handle on the span corresponding to that line
+                        var spanHandle = $(`#${lineNum}.line`);     // note `#x.y` instead of `#x .y`
+
+                        // increment entry for quadrants of relevant line in freq matrix
+                        // custom decision on how to distribute credit by quadrants
+                        // since we don't know of specific quadrant
+                        // right now: 4/8, 2/8, 1/8, 1/8 
+                        console.log(quadFreqs);
+                        quadFreqs[lineNum][0] += 0.50;
+                        quadFreqs[lineNum][1] += 0.25;
+                        quadFreqs[lineNum][2] += 0.125;
+                        quadFreqs[lineNum][3] += 0.125;
+
+                        // use custom formulat to convert frequencies for each
+                        // quadrant to a single percent read 
+                        var freqs = quadFreqs[lineNum];
+                        var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
+                        var MAX = 450;
+                        percentRead = (normalisedFreq / MAX) * 100;
+
+                        // record info on line num, quad num, and timestamp
+                        const t = (new Date()).getTime();
+                        infoStr = `${lineNum}|NA|${t}`;
+
+                        // use linear gradient with given percent to highlight 
+                        // the selected span
+                        var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
+                        spanHandle.css("background", backgroundCSS);
+                    
+                    // CASE 3 -- gaze did not rest on a line at all
+                    // -----------------
+                    } else {
                         // record that you weren't looking at a line
                         const t = (new Date()).getTime();
-                        infoStr = `-1|-1|${t}`;
+                        infoStr = `-1|-1|${t}`;                        
                     }
 
                     // send info on line num, quad num, and timestamp, back to server
