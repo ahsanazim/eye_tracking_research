@@ -6,6 +6,10 @@ console.log("COMINGGGGGGGGGGGGGGGG");
 alert(location.href);
 */
 
+var lineQueue = new Array();
+const QUEUE_LENGTH = 10;
+const MIN_PERCENT_READ = 15;
+
 // POST request to our api to extract content
 // has to be done via background script (src/bg/background.js)
 var targetSiteURL = location.href
@@ -224,25 +228,38 @@ chrome.runtime.sendMessage(
                         // selector for span containing these quadrants
                         var spanHandle = $(`#${spanNum}.line`);     // note `#x.y` instead of `#x .y`
 
-                        // increment entry for relevant quadrant 
-                        // of relevant line in freq matrix
-                        quadFreqs[spanNum][quadNum] += 1;
-
-                        // use custom formulat to convert frequencies for each
-                        // quadrant to a single percent read 
-                        var freqs = quadFreqs[spanNum];
-                        var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
-                        var MAX = 450;
-                        percentRead = (normalisedFreq / MAX) * 100;
-
                         // record info on line num, quad num, and timestamp
                         const t = (new Date()).getTime();
                         infoStr = `${spanNum}|${quadNum}|${t}`;
 
-                        // use linear gradient with given percent to highlight 
-                        // the selected span
-                        var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
-                        spanHandle.css("background", backgroundCSS);
+                        // if new line is NOT an outlier, process it. Otherwise don't
+                        if (lineIsValid(lineQueue, spanNum)) {
+                            // add to queue
+                            lineQueue.push(spanNum);       // add to end of array
+                            // and remove previous oldest from queue (after queue is of length)
+                            if (lineQueue.length > QUEUE_LENGTH) {
+                                lineQueue.shift(); // removes first element from array
+                            }
+
+                            // increment entry for relevant quadrant 
+                            // of relevant line in freq matrix
+                            quadFreqs[spanNum][quadNum] += 1;
+
+                            // use custom formulat to convert frequencies for each
+                            // quadrant to a single percent read 
+                            var freqs = quadFreqs[spanNum];
+                            var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
+                            var MAX = 450;
+                            percentRead = (normalisedFreq / MAX) * 100;
+
+                            // use linear gradient with given percent to highlight 
+                            // the selected span
+                            // ONLY if we've read >= 10% of line
+                            if (percentRead >= MIN_PERCENT_READ) {
+                                var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
+                                spanHandle.css("background", backgroundCSS);
+                            }
+                        }
                     
                     // CASE 2 - gaze rested on a line, but no specific quadrant
                     // -----------------
@@ -252,31 +269,46 @@ chrome.runtime.sendMessage(
                         // get a handle on the span corresponding to that line
                         var spanHandle = $(`#${lineNum}.line`);     // note `#x.y` instead of `#x .y`
 
-                        // increment entry for quadrants of relevant line in freq matrix
-                        // custom decision on how to distribute credit by quadrants
-                        // since we don't know of specific quadrant
-                        // right now: 4/8, 2/8, 1/8, 1/8 
-                        console.log(quadFreqs);
-                        quadFreqs[lineNum][0] += 0.50;
-                        quadFreqs[lineNum][1] += 0.25;
-                        quadFreqs[lineNum][2] += 0.125;
-                        quadFreqs[lineNum][3] += 0.125;
-
-                        // use custom formulat to convert frequencies for each
-                        // quadrant to a single percent read 
-                        var freqs = quadFreqs[lineNum];
-                        var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
-                        var MAX = 450;
-                        percentRead = (normalisedFreq / MAX) * 100;
-
                         // record info on line num, quad num, and timestamp
                         const t = (new Date()).getTime();
                         infoStr = `${lineNum}|NA|${t}`;
 
-                        // use linear gradient with given percent to highlight 
-                        // the selected span
-                        var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
-                        spanHandle.css("background", backgroundCSS);
+                        lineNum = parseInt(lineNum);
+
+                        // if new line is NOT an outlier, process it. Otherwise don't
+                        if (lineIsValid(lineQueue, lineNum)) {
+                            // add to queue
+                            lineQueue.push(lineNum);       // add to end of array
+                            // and remove previous oldest from queue (after queue is of length)
+                            if (lineQueue.length > QUEUE_LENGTH) {
+                                lineQueue.shift(); // removes first element from array
+                            }
+
+                            // increment entry for quadrants of relevant line in freq matrix
+                            // custom decision on how to distribute credit by quadrants
+                            // since we don't know of specific quadrant
+                            // right now: 4/8, 2/8, 1/8, 1/8 
+                            console.log(quadFreqs);
+                            quadFreqs[lineNum][0] += 0.50;
+                            quadFreqs[lineNum][1] += 0.25;
+                            quadFreqs[lineNum][2] += 0.125;
+                            quadFreqs[lineNum][3] += 0.125;
+
+                            // use custom formulat to convert frequencies for each
+                            // quadrant to a single percent read 
+                            var freqs = quadFreqs[lineNum];
+                            var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
+                            var MAX = 450;
+                            percentRead = (normalisedFreq / MAX) * 100;
+
+                            // use linear gradient with given percent to highlight 
+                            // the selected span
+                            // ONLY if we've read >= 10% of line
+                            if (percentRead >= MIN_PERCENT_READ) {
+                                var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
+                                spanHandle.css("background", backgroundCSS);
+                            }
+                        }
                     
                     // CASE 3 -- gaze did not rest on a line at all
                     // -----------------
@@ -429,6 +461,36 @@ chrome.runtime.sendMessage(
         */
     });
 
+/**
+ * 
+ * @param {*} arr 
+ */
+function getArrayAverage(arr) {
+    var total = 0;
+    arr.forEach(function(el) {
+        total += el;
+    });
+    var avg = total / arr.length;
+    return avg
+}
+
+/**
+ * 
+ * @param {*} arr 
+ */
+function lineIsValid(arr, el) {
+    if (el >= 0) {
+        if (arr.length == 0) {
+            return true;
+        }
+        var avg = getArrayAverage(arr);
+        var diff = Math.abs(el - avg);
+        const MAX_DIFF = 3;
+        return (diff <= MAX_DIFF)
+    } else {
+        return false
+    }
+}
 
 /**
  * Returns true if elements in a certain window of an
