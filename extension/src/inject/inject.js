@@ -7,8 +7,8 @@ alert(location.href);
 */
 
 var lineQueue = new Array();
-const QUEUE_LENGTH = 10;
-const MIN_PERCENT_READ = 15;
+const QUEUE_LENGTH = 100;
+const MIN_PERCENT_READ = 20;
 
 // POST request to our api to extract content
 // has to be done via background script (src/bg/background.js)
@@ -165,11 +165,6 @@ chrome.runtime.sendMessage(
                     // HIGHLIGHTING MECHANISM: line + quadrant based
                     ///////////////////////////////////////////////////////////
 
-                    // https://www.w3schools.com/cssref/css_colors.asp
-                    // https://www.w3schools.com/colors/colors_picker.asp?colorhex=F0F8FF
-                    // var colorLvls = ['DarkRed', 'Red', 'DarkGreen', 'GreenYellow'];
-                    var colorLvls = ['#ffffff', '#f0f8ff', '#cce7ff', '#99cfff'];
-
                     // INITIALISATION - DONE ONLY ONCE
                     // at first you have to color everything the most basic color
                     // this is only done once, afterwards you'll continue updating
@@ -177,7 +172,7 @@ chrome.runtime.sendMessage(
                     if (!initialHighlightingDone) {
                         for(var i = 0; i < quadFreqs.length; i++) {
                             for(var j = 0; j < quadFreqs[i].length; j++) {
-                                var baseColor = colorLvls[0];   // use lowest level
+                                var baseColor = '#ffffff';
                                 var currSpanNum = i;
                                 var currQuadNum = j;
                                 var spanHandle = $(`#${currSpanNum}.line`);   // note `#x.y` instead of `#x .y`
@@ -216,56 +211,112 @@ chrome.runtime.sendMessage(
                     // IF gaze was on a line
                     var infoStr = '';               // will fill with info you send back to server
 
-                    // CASE 1 - gaze rested on specific quadrant (subset of line)
-                    // -----------------
+                    // determine line (and, if possible, quad) numbers
+                    var lineNum = -1;
                     if (currQuadId != '') {
                         // parse the quadrant span's ID for quad number and span number
                         // quadNums range [0,3], whereas spans are [0,INF]
                         // In a string XYYYY , X = quad number, Y = span number
                         var quadNum = parseInt(currQuadId.charAt(0));
-                        var spanNum = parseInt(currQuadId.substr(1));
+                        var lineNum = parseInt(currQuadId.substr(1));
+                    } else if (currLineId != '') {
+                        // id of `line` span == line number of that span
+                        var lineNum = parseInt(currLineId);
+                    }
+                    // add to queue
+                    lineQueue.push(lineNum);       // add to end of array
+                    // and remove previous oldest from queue (after queue is of length)
+                    if (lineQueue.length > QUEUE_LENGTH) {
+                        lineQueue.shift(); // removes first element from array
+                    }
 
+                    // CASE 1 - gaze rested on specific quadrant (subset of line)
+                    // -----------------
+                    if (currQuadId != '') {
                         // selector for span containing these quadrants
-                        var spanHandle = $(`#${spanNum}.line`);     // note `#x.y` instead of `#x .y`
+                        var spanHandle = $(`#${lineNum}.line`);     // note `#x.y` instead of `#x .y`
 
                         // record info on line num, quad num, and timestamp
                         const t = (new Date()).getTime();
-                        infoStr = `${spanNum}|${quadNum}|${t}`;
+                        infoStr = `${lineNum}|${quadNum}|${t}`;
 
-                        // if new line is NOT an outlier, process it. Otherwise don't
-                        if (lineIsValid(lineQueue, spanNum)) {
-                            // add to queue
-                            lineQueue.push(spanNum);       // add to end of array
-                            // and remove previous oldest from queue (after queue is of length)
-                            if (lineQueue.length > QUEUE_LENGTH) {
-                                lineQueue.shift(); // removes first element from array
+                        // var ans = enoughOneElement(lineQueue);
+                        // console.log("ans", ans);
+                        // var hasEnoughOfLine = ans[0];
+                        // var majorityLineNum = parseInt(ans[1]);
+
+                        ///////////////////////////////////////
+                        var freqDict = constructFreqDict(lineQueue);
+                        const FREQ_RATIO = 0.8;
+                        // https://zellwk.com/blog/looping-through-js-objects/
+                        const keys = Object.keys(freqDict);
+                        console.log(freqDict);
+                        console.log(keys);
+                        keys.forEach((key) => {
+                            freq = freqDict[key];
+                            if (freq >= (FREQ_RATIO*QUEUE_LENGTH)) {
+                                var majorityLineNum = parseInt(key);
+        
+                                if (majorityLineNum == lineNum) {
+                                    // increment entry for relevant quadrant 
+                                    // of relevant line in freq matrix
+                                    quadFreqs[lineNum][quadNum] += 1;
+        
+                                    // use custom formula to convert frequencies for each
+                                    // quadrant to a single percent read 
+                                    var freqs = quadFreqs[lineNum];
+                                    var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
+                                    var MAX = 450;
+                                    var percentRead = (normalisedFreq / MAX) * 100;
+                                    console.log("percent", percentRead);
+        
+                                    // use linear gradient with given percent to highlight 
+                                    // the selected span
+                                    // ONLY if we've read >= 10% of line
+                                    if (percentRead >= MIN_PERCENT_READ) {
+                                        var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
+                                        spanHandle.css("background", backgroundCSS);
+                                    }
+                                }
                             }
+                        })
+                        //////////////////////////////////////
 
-                            // increment entry for relevant quadrant 
-                            // of relevant line in freq matrix
-                            quadFreqs[spanNum][quadNum] += 1;
 
-                            // use custom formulat to convert frequencies for each
-                            // quadrant to a single percent read 
-                            var freqs = quadFreqs[spanNum];
-                            var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
-                            var MAX = 450;
-                            percentRead = (normalisedFreq / MAX) * 100;
 
-                            // use linear gradient with given percent to highlight 
-                            // the selected span
-                            // ONLY if we've read >= 10% of line
-                            if (percentRead >= MIN_PERCENT_READ) {
-                                var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
-                                spanHandle.css("background", backgroundCSS);
-                            }
-                        }
-                    
+
+
+
+                        // console.log("ans", ans);
+                        // var hasEnoughOfLine = ans[0];
+                        // var majorityLineNum = parseInt(ans[1]);
+
+                        // if (hasEnoughOfLine && (majorityLineNum == lineNum)) {
+                        //     console.log("entered IF 1");
+                        //     // increment entry for relevant quadrant 
+                        //     // of relevant line in freq matrix
+                        //     quadFreqs[lineNum][quadNum] += 1;
+
+                        //     // use custom formula to convert frequencies for each
+                        //     // quadrant to a single percent read 
+                        //     var freqs = quadFreqs[lineNum];
+                        //     var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
+                        //     var MAX = 450;
+                        //     var percentRead = (normalisedFreq / MAX) * 100;
+                        //     console.log("percent", percentRead);
+
+                        //     // use linear gradient with given percent to highlight 
+                        //     // the selected span
+                        //     // ONLY if we've read >= 10% of line
+                        //     // if (percentRead >= MIN_PERCENT_READ) {
+                        //     var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
+                        //     spanHandle.css("background", backgroundCSS);
+                        //     // }
+                        // }
+
                     // CASE 2 - gaze rested on a line, but no specific quadrant
                     // -----------------
                     } else if (currLineId != '') {        // Gaze not on a line
-                        // id of `line` span == line number of that span
-                        var lineNum = currLineId;
                         // get a handle on the span corresponding to that line
                         var spanHandle = $(`#${lineNum}.line`);     // note `#x.y` instead of `#x .y`
 
@@ -275,40 +326,96 @@ chrome.runtime.sendMessage(
 
                         lineNum = parseInt(lineNum);
 
-                        // if new line is NOT an outlier, process it. Otherwise don't
-                        if (lineIsValid(lineQueue, lineNum)) {
-                            // add to queue
-                            lineQueue.push(lineNum);       // add to end of array
-                            // and remove previous oldest from queue (after queue is of length)
-                            if (lineQueue.length > QUEUE_LENGTH) {
-                                lineQueue.shift(); // removes first element from array
-                            }
-
-                            // increment entry for quadrants of relevant line in freq matrix
-                            // custom decision on how to distribute credit by quadrants
-                            // since we don't know of specific quadrant
-                            // right now: 4/8, 2/8, 1/8, 1/8 
-                            console.log(quadFreqs);
-                            quadFreqs[lineNum][0] += 0.50;
-                            quadFreqs[lineNum][1] += 0.25;
-                            quadFreqs[lineNum][2] += 0.125;
-                            quadFreqs[lineNum][3] += 0.125;
-
-                            // use custom formulat to convert frequencies for each
-                            // quadrant to a single percent read 
-                            var freqs = quadFreqs[lineNum];
-                            var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
-                            var MAX = 450;
-                            percentRead = (normalisedFreq / MAX) * 100;
-
-                            // use linear gradient with given percent to highlight 
-                            // the selected span
-                            // ONLY if we've read >= 10% of line
-                            if (percentRead >= MIN_PERCENT_READ) {
-                                var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
-                                spanHandle.css("background", backgroundCSS);
-                            }
+                        // add to queue
+                        lineQueue.push(lineNum);       // add to end of array
+                        // and remove previous oldest from queue (after queue is of length)
+                        if (lineQueue.length > QUEUE_LENGTH) {
+                            lineQueue.shift(); // removes first element from array
                         }
+
+                        // var ans = enoughOneElement(lineQueue);
+                        // console.log("ans", ans);
+                        // var hasEnoughOfLine = ans[0];
+                        // var majorityLineNum = parseInt(ans[1]);
+
+
+                        ////////////////////////////
+
+                        var freqDict = constructFreqDict(lineQueue);
+                        const FREQ_RATIO = 0.80;
+                        // https://zellwk.com/blog/looping-through-js-objects/
+                        const keys = Object.keys(freqDict);
+                        console.log(freqDict);
+                        console.log(keys);
+                        keys.forEach((key) => {
+                            freq = freqDict[key];
+                            if (freq >= (FREQ_RATIO*QUEUE_LENGTH)) {
+                                var majorityLineNum = parseInt(key);
+                                // if new line is NOT an outlier, process it. Otherwise don't
+                                if (majorityLineNum == lineNum) {
+                                    // increment entry for quadrants of relevant line in freq matrix
+                                    // custom decision on how to distribute credit by quadrants
+                                    // since we don't know of specific quadrant
+                                    // right now: 4/8, 2/8, 1/8, 1/8 
+                                    console.log(quadFreqs);
+                                    quadFreqs[lineNum][0] += 0.50;
+                                    quadFreqs[lineNum][1] += 0.25;
+                                    quadFreqs[lineNum][2] += 0.125;
+                                    quadFreqs[lineNum][3] += 0.125;
+
+                                    // use custom formulat to convert frequencies for each
+                                    // quadrant to a single percent read 
+                                    var freqs = quadFreqs[lineNum];
+                                    var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
+                                    var MAX = 450;
+                                    var percentRead = (normalisedFreq / MAX) * 100;
+                                    console.log("percent", percentRead);
+
+                                    // use linear gradient with given percent to highlight 
+                                    // the selected span
+                                    // ONLY if we've read >= 10% of line
+                                    if (percentRead >= MIN_PERCENT_READ) {
+                                        var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
+                                        spanHandle.css("background", backgroundCSS);
+                                    }
+                                }
+                            }
+                        })
+
+                        ////////////////////////////
+
+
+
+
+                        // // if new line is NOT an outlier, process it. Otherwise don't
+                        // if (hasEnoughOfLine && (majorityLineNum == lineNum)) {
+                        //     console.log("entered IF 2");
+                        //     // increment entry for quadrants of relevant line in freq matrix
+                        //     // custom decision on how to distribute credit by quadrants
+                        //     // since we don't know of specific quadrant
+                        //     // right now: 4/8, 2/8, 1/8, 1/8 
+                        //     console.log(quadFreqs);
+                        //     quadFreqs[lineNum][0] += 0.50;
+                        //     quadFreqs[lineNum][1] += 0.25;
+                        //     quadFreqs[lineNum][2] += 0.125;
+                        //     quadFreqs[lineNum][3] += 0.125;
+
+                        //     // use custom formulat to convert frequencies for each
+                        //     // quadrant to a single percent read 
+                        //     var freqs = quadFreqs[lineNum];
+                        //     var normalisedFreq = freqs[0] + freqs[1] + (10*freqs[2]) + (100 * freqs[3]);
+                        //     var MAX = 450;
+                        //     var percentRead = (normalisedFreq / MAX) * 100;
+                        //     console.log("percent", percentRead);
+
+                        //     // use linear gradient with given percent to highlight 
+                        //     // the selected span
+                        //     // ONLY if we've read >= 10% of line
+                        //     // if (percentRead >= MIN_PERCENT_READ) {
+                        //     var backgroundCSS = `linear-gradient(.25turn, #99cfff, ${percentRead}%, #ffffff)`;
+                        //     spanHandle.css("background", backgroundCSS);
+                        //     // }
+                        // }
                     
                     // CASE 3 -- gaze did not rest on a line at all
                     // -----------------
@@ -465,31 +572,38 @@ chrome.runtime.sendMessage(
  * 
  * @param {*} arr 
  */
-function getArrayAverage(arr) {
-    var total = 0;
-    arr.forEach(function(el) {
-        total += el;
-    });
-    var avg = total / arr.length;
-    return avg
+function constructFreqDict(arr) {
+    var freqDict = {};
+    arr.forEach((el) => {
+        if (freqDict[el]) {
+            freqDict[el] += 1;
+        } else {
+            freqDict[el] = 1;
+        }
+    })
+    return freqDict;
 }
 
 /**
- * 
+ * returns true if enough of an array is populated
+ * by one element
  * @param {*} arr 
  */
-function lineIsValid(arr, el) {
-    if (el >= 0) {
-        if (arr.length == 0) {
-            return true;
+function enoughOneElement(arr) {
+    var freqDict = constructFreqDict(arr);
+    const FREQ_RATIO = 0.5;
+    // https://zellwk.com/blog/looping-through-js-objects/
+    const keys = Object.keys(freqDict);
+    console.log(freqDict);
+    console.log(keys);
+    keys.forEach((key) => {
+        freq = freqDict[key];
+        if (freq >= (FREQ_RATIO*QUEUE_LENGTH)) {
+            console.log("line:", key,"freq:", freq, "min freq:", FREQ_RATIO*QUEUE_LENGTH);
+            return [true, key];
         }
-        var avg = getArrayAverage(arr);
-        var diff = Math.abs(el - avg);
-        const MAX_DIFF = 3;
-        return (diff <= MAX_DIFF)
-    } else {
-        return false
-    }
+    })
+    return [false, -1];
 }
 
 /**
